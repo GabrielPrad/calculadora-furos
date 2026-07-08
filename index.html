@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Calculadora de furos e divisões</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F2E9;
+    --card:#FBFAF5;
+    --ink:#20261F;
+    --ink-soft:#5B6058;
+    --line:#2C5F7C;
+    --line-faint:rgba(44,95,124,0.16);
+    --amber:#C97A2B;
+    --amber-soft:#F3E3D0;
+    --border:rgba(32,38,31,0.14);
+    --grid-tex:rgba(44,95,124,0.045);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid-tex) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-tex) 1px, transparent 1px);
+    background-size:22px 22px;
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    padding:20px 14px 60px;
+  }
+  .wrap{max-width:460px;margin:0 auto;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--line);
+    margin:0 0 4px;
+  }
+  h1{
+    font-size:22px;
+    font-weight:600;
+    margin:0 0 4px;
+    line-height:1.25;
+  }
+  .sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:0 0 20px;
+    line-height:1.5;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .field{margin-bottom:16px;}
+  .field:last-child{margin-bottom:0;}
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:500;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    letter-spacing:0.02em;
+  }
+  .input-row{
+    display:flex;
+    align-items:stretch;
+    border-bottom:1.5px solid var(--ink);
+    padding-bottom:2px;
+  }
+  input[type="number"]{
+    flex:1;
+    border:none;
+    background:transparent;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:22px;
+    font-weight:500;
+    color:var(--ink);
+    padding:4px 0;
+    width:100%;
+    -moz-appearance:textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  input[type="number"]:focus{outline:none;}
+  .unit{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+    align-self:flex-end;
+    padding-bottom:8px;
+  }
+  .stepper{display:flex;gap:6px;align-self:flex-end;padding-bottom:4px;}
+  .step-btn{
+    width:30px;height:30px;
+    border:1px solid var(--border);
+    background:var(--paper);
+    border-radius:5px;
+    font-size:16px;
+    color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    user-select:none;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .step-btn:active{background:var(--amber-soft);border-color:var(--amber);}
+
+  .diagram-card{padding:14px 14px 10px;}
+  svg{display:block;width:100%;height:auto;}
+  .pt-label{font-family:'IBM Plex Mono', monospace;font-size:10px;font-weight:500;fill:var(--ink);}
+  .dim-label{font-family:'IBM Plex Mono', monospace;font-size:10px;fill:var(--line);}
+  .coord-label{font-family:'IBM Plex Mono', monospace;font-size:8.5px;fill:var(--ink-soft);}
+  .diagram-note{font-size:11px;color:var(--ink-soft);text-align:center;margin:8px 0 0;display:none;}
+
+  .readouts{display:flex;gap:12px;margin-bottom:16px;}
+  .readout{
+    flex:1;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px 12px;
+    text-align:left;
+  }
+  .readout .rl{
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    display:block;
+  }
+  .readout .rv{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:20px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .readout .ru{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .readout.accent{border-color:var(--amber);background:var(--amber-soft);}
+  .readout.accent .rv{color:#7A4C1B;}
+
+  details{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:6px;
+    margin-bottom:10px;
+    overflow:hidden;
+  }
+  summary{
+    padding:13px 16px;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    list-style:none;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  summary::-webkit-details-marker{display:none;}
+  summary::after{
+    content:'+';
+    font-family:'IBM Plex Mono', monospace;
+    font-size:16px;
+    color:var(--line);
+  }
+  details[open] summary::after{content:'\2212';}
+  .table-wrap{padding:0 16px 14px;}
+  table{width:100%;border-collapse:collapse;font-family:'IBM Plex Mono', monospace;font-size:12.5px;}
+  th{
+    text-align:right;
+    font-weight:500;
+    color:var(--ink-soft);
+    padding:6px 4px;
+    border-bottom:1px solid var(--border);
+    font-size:11px;
+  }
+  th:first-child, td:first-child{text-align:left;}
+  td{text-align:right;padding:6px 4px;border-bottom:1px solid var(--line-faint);}
+  .about-text{padding:0 16px 14px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;}
+  .copy-btn{
+    width:100%;
+    padding:12px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:6px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    margin-bottom:6px;
+  }
+  .copy-btn:active{background:var(--line);}
+  .copy-hint{font-size:11px;color:var(--ink-soft);text-align:center;min-height:14px;}
+  .warn{
+    font-size:12.5px;
+    color:#8A3B1F;
+    background:#F7E4DB;
+    border:1px solid #E0A87F;
+    border-radius:6px;
+    padding:10px 12px;
+    margin-bottom:16px;
+    display:none;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Divisão de circunferência</p>
+  <h1>Calculadora de furos</h1>
+  <p class="sub">Informe o diâmetro (Z) e a quantidade de furos ou lados. O cálculo é atualizado automaticamente.</p>
+
+  <div class="card">
+    <div class="field">
+      <label for="zInput">Diâmetro Z</label>
+      <div class="input-row">
+        <input type="number" id="zInput" value="100" min="0.1" step="0.1" inputmode="decimal">
+        <span class="unit">mm</span>
+      </div>
+    </div>
+    <div class="field">
+      <label for="nInput">Quantidade de furos / lados (N)</label>
+      <div class="input-row">
+        <input type="number" id="nInput" value="6" min="3" max="60" step="1" inputmode="numeric">
+        <div class="stepper">
+          <div class="step-btn" id="nMinus">−</div>
+          <div class="step-btn" id="nPlus">+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warn" id="warnBox"></div>
+
+  <div class="card diagram-card">
+    <svg id="diagram" viewBox="0 0 360 360"></svg>
+    <p class="diagram-note" id="diagramNote"></p>
+  </div>
+
+  <div class="readouts">
+    <div class="readout accent">
+      <span class="rl">Passo entre furos</span>
+      <span class="rv" id="stepVal">-</span> <span class="ru">mm</span>
+    </div>
+    <div class="readout">
+      <span class="rl">Ângulo</span>
+      <span class="rv" id="angVal">-</span> <span class="ru">°</span>
+    </div>
+  </div>
+
+  <details>
+    <summary>Coordenadas X, Y de cada ponto</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ponto</th><th>X (mm)</th><th>Y (mm)</th></tr></thead>
+        <tbody id="coordBody"></tbody>
+      </table>
+      <p style="font-size:11px;color:var(--ink-soft);margin:8px 0 0;">X: direita do centro (+) · Y: acima do centro (+)</p>
+    </div>
+    <div style="padding:0 16px 16px;">
+      <button class="copy-btn" id="copyBtn">Copiar coordenadas</button>
+      <p class="copy-hint" id="copyHint">&nbsp;</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Sobre o cálculo</summary>
+    <p class="about-text">
+      Os pontos são gerados por divisão geométrica exata da circunferência (mesmo princípio das tabelas de coordenadas para furação do Formulário Casillas), começando no ponto superior e seguindo em sentido horário. O passo entre furos consecutivos é Z multiplicado pelo seno de 180° dividido por N. As coordenadas X e Y de cada ponto são medidas a partir do centro. Esse método foi conferido contra os valores legíveis da tabela original (3, 5, 6 e 10 furos) e bate com precisão, por isso serve também para as quantidades que estavam ilegíveis na foto.
+    </p>
+  </details>
+</div>
+
+<script>
+  const zInput = document.getElementById('zInput');
+  const nInput = document.getElementById('nInput');
+  const warnBox = document.getElementById('warnBox');
+  const svg = document.getElementById('diagram');
+  const stepVal = document.getElementById('stepVal');
+  const angVal = document.getElementById('angVal');
+  const coordBody = document.getElementById('coordBody');
+  const copyBtn = document.getElementById('copyBtn');
+  const copyHint = document.getElementById('copyHint');
+
+  let lastCoords = [];
+
+  function fmt(n, d){
+    return n.toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d});
+  }
+
+  function clampN(n){
+    if(isNaN(n)) return 3;
+    return Math.min(60, Math.max(3, Math.round(n)));
+  }
+
+  function update(){
+    let Z = parseFloat(zInput.value);
+    let N = parseInt(nInput.value, 10);
+
+    warnBox.style.display = 'none';
+    if(isNaN(Z) || Z <= 0){
+      warnBox.textContent = 'Informe um diâmetro Z maior que zero.';
+      warnBox.style.display = 'block';
+      return;
+    }
+    if(isNaN(N) || N < 3){
+      warnBox.textContent = 'A quantidade mínima de furos ou lados é 3.';
+      warnBox.style.display = 'block';
+      return;
+    }
+    N = clampN(N);
+
+    const R = Z / 2;
+    const angleStep = 360 / N;
+    const chord = Z * Math.sin(Math.PI / N);
+
+    stepVal.textContent = fmt(chord, 2);
+    angVal.textContent = fmt(angleStep, 2);
+
+    lastCoords = [];
+    let coordRows = '';
+    for(let i = 0; i < N; i++){
+      const angleDeg = 90 - i * angleStep;
+      const angleRad = angleDeg * Math.PI / 180;
+      const x = R * Math.cos(angleRad);
+      const y = R * Math.sin(angleRad);
+      lastCoords.push({i:i+1, x, y});
+      coordRows += '<tr><td>' + (i+1) + '</td><td>' + fmt(x,2) + '</td><td>' + fmt(y,2) + '</td></tr>';
+    }
+    coordBody.innerHTML = coordRows;
+
+    const diagramNote = document.getElementById('diagramNote');
+    if(N > 12){
+      diagramNote.textContent = 'Para N > 12 os valores ficam só na tabela acima, pra não poluir o desenho.';
+      diagramNote.style.display = 'block';
+    } else {
+      diagramNote.style.display = 'none';
+    }
+
+    drawDiagram(N, angleStep, lastCoords);
+    copyHint.textContent = '\u00A0';
+  }
+
+  function drawDiagram(N, angleStep, coordsList){
+    const cx = 180, cy = 180, r = 96;
+    const axisExt = r + 40;
+    const leaderR = r + 24;
+    const showCoords = N <= 12;
+    let s = '';
+
+    s += '<defs><marker id="axArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="#2C5F7C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>';
+
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="rgba(44,95,124,0.22)" stroke-width="1"/>';
+
+    s += '<line x1="' + (cx-axisExt) + '" y1="' + cy + '" x2="' + (cx+axisExt) + '" y2="' + cy + '" stroke="#2C5F7C" stroke-width="1" marker-end="url(#axArrow)"/>';
+    s += '<line x1="' + cx + '" y1="' + (cy+axisExt) + '" x2="' + cx + '" y2="' + (cy-axisExt) + '" stroke="#2C5F7C" stroke-width="1" marker-end="url(#axArrow)"/>';
+    s += '<text class="dim-label" x="' + (cx+axisExt+6) + '" y="' + (cy+4) + '" text-anchor="start">X</text>';
+    s += '<text class="dim-label" x="' + cx + '" y="' + (cy-axisExt-8) + '" text-anchor="middle">Y</text>';
+
+    let pts = [];
+    for(let i = 0; i < N; i++){
+      const angleDeg = 90 - i * angleStep;
+      const rad = angleDeg * Math.PI / 180;
+      const px = cx + r * Math.cos(rad);
+      const py = cy - r * Math.sin(rad);
+      pts.push([px, py, rad]);
+    }
+
+    let poly = pts.map(p => p[0]+','+p[1]).join(' ');
+    s += '<polygon points="' + poly + '" fill="none" stroke="#2C5F7C" stroke-width="1"/>';
+
+    pts.forEach((p, idx) => {
+      const [px, py, rad] = p;
+      s += '<circle cx="' + px + '" cy="' + py + '" r="5" fill="#FBFAF5" stroke="#20261F" stroke-width="1.5"/>';
+
+      const lx = cx + leaderR * Math.cos(rad);
+      const ly = cy - leaderR * Math.sin(rad);
+      const cosr = Math.cos(rad), sinr = Math.sin(rad);
+      let anchor = 'middle';
+      if(cosr > 0.2) anchor = 'start';
+      else if(cosr < -0.2) anchor = 'end';
+
+      const y1 = ly + 3;
+      const y2 = sinr >= 0 ? y1 - 11 : y1 + 11;
+
+      s += '<text class="pt-label" x="' + lx + '" y="' + y1 + '" text-anchor="' + anchor + '">' + (idx+1) + '</text>';
+      if(showCoords){
+        const c = coordsList[idx];
+        const label = '(' + Math.round(c.x) + ', ' + Math.round(c.y) + ')';
+        s += '<text class="coord-label" x="' + lx + '" y="' + y2 + '" text-anchor="' + anchor + '">' + label + '</text>';
+      }
+    });
+
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="2" fill="#20261F"/>';
+
+    svg.innerHTML = s;
+  }
+
+  copyBtn.addEventListener('click', () => {
+    const Z = parseFloat(zInput.value);
+    const N = parseInt(nInput.value, 10);
+    let text = 'Z = ' + Z + ' mm | N = ' + N + '\nPonto\tX (mm)\tY (mm)\n';
+    lastCoords.forEach(c => {
+      text += c.i + '\t' + fmt(c.x,2) + '\t' + fmt(c.y,2) + '\n';
+    });
+    navigator.clipboard.writeText(text).then(() => {
+      copyHint.textContent = 'Coordenadas copiadas.';
+    }).catch(() => {
+      copyHint.textContent = 'Não foi possível copiar automaticamente.';
+    });
+  });
+
+  document.getElementById('nMinus').addEventListener('click', () => {
+    nInput.value = clampN(parseInt(nInput.value,10) - 1);
+    update();
+  });
+  document.getElementById('nPlus').addEventListener('click', () => {
+    nInput.value = clampN(parseInt(nInput.value,10) + 1);
+    update();
+  });
+
+  zInput.addEventListener('input', update);
+  nInput.addEventListener('input', update);
+
+  update();
+</script>
+</body>
+</html>
